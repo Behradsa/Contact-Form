@@ -20,12 +20,14 @@ function App() {
   });
 
   const [showPopUp, setShowPopUp] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowPopUp(false);
     }, 5000);
     return () => clearTimeout(timer);
   }, [showPopUp]);
+
   let inputs = [
     {
       name: "firstname",
