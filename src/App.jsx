@@ -1,5 +1,6 @@
 import FormInput from "./FormInput";
-import React, { useState } from "react";
+import PopUp from "./PopUp";
+import React, { useState, useEffect } from "react";
 function App() {
   const [values, setValues] = useState({
     firstname: "",
@@ -18,20 +19,27 @@ function App() {
     confirm: false,
   });
 
+  const [showPopUp, setShowPopUp] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowPopUp(false);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [showPopUp]);
   let inputs = [
     {
       name: "firstname",
       type: "text",
       title: "First Name",
       errorMessage: "This field is required",
-      pattern: "^[A-Za-z]+(?:[-' ][A-Za-z]+)*$",
+      pattern: "^.+$",
     },
     {
       name: "lastname",
       type: "text",
       title: "Last Name",
       errorMessage: "This field is required",
-      pattern: "^[A-Za-z]+(?:[-' ][A-Za-z]+)*$",
+      pattern: "^.+$",
     },
     {
       name: "email",
@@ -66,9 +74,11 @@ function App() {
     } else {
       setValues((v) => ({ ...v, [e.target.name]: e.target.checked }));
     }
+
     errors[e.target.name] = false;
   };
   const checkErrors = (formValues) => {
+    let number_of_errors = 0;
     for (const i in inputs) {
       if (inputs[i].pattern) {
         const regex = new RegExp(inputs[i].pattern);
@@ -77,6 +87,7 @@ function App() {
           !regex.test(formValues[inputs[i].name])
         ) {
           setErrors((e) => ({ ...e, [inputs[i].name]: true }));
+          number_of_errors++;
         } else {
           setErrors((e) => ({ ...e, [inputs[i].name]: false }));
         }
@@ -84,15 +95,17 @@ function App() {
     }
     if (formValues["query"] == "") {
       setErrors((e) => ({ ...e, ["query"]: true }));
+      number_of_errors++;
     } else {
       setErrors((e) => ({ ...e, ["query"]: false }));
     }
     if (!formValues["confirm"]) {
       setErrors((e) => ({ ...e, ["confirm"]: true }));
+      number_of_errors++;
     } else {
       setErrors((e) => ({ ...e, ["confirm"]: false }));
     }
-    console.log(formValues["confirm"]);
+    return number_of_errors;
   };
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -102,26 +115,34 @@ function App() {
     for (let [key, value] of formData.entries()) {
       formValues[key] = value;
     }
-    checkErrors(formValues);
+    let number_of_errors = checkErrors(formValues);
+    console.log(number_of_errors);
+    setShowPopUp(false);
+    if (number_of_errors == 0) {
+      setShowPopUp(true);
+    }
   };
 
   return (
-    <main>
-      <h2>Contact Us</h2>
-      <form onSubmit={handleSubmit} noValidate>
-        {inputs.map((input) => (
-          <FormInput
-            key={input.name}
-            {...input}
-            value={values[input.name]}
-            onChange={handleChange}
-            error={errors[input.name]}
-          />
-        ))}
+    <>
+      {showPopUp ? <PopUp /> : null}
+      <main>
+        <h2>Contact Us</h2>
+        <form onSubmit={handleSubmit} noValidate>
+          {inputs.map((input) => (
+            <FormInput
+              key={input.name}
+              {...input}
+              value={values[input.name]}
+              onChange={handleChange}
+              error={errors[input.name]}
+            />
+          ))}
 
-        <button type="submit">Submit</button>
-      </form>
-    </main>
+          <button type="submit">Submit</button>
+        </form>
+      </main>
+    </>
   );
 }
 
